@@ -1,24 +1,6 @@
-#######################################################################
-# plothelpers.py
-#Various often used functions for nicer plots with Matplotlib.
-#
-#Copyright 2017 Marvin A. Böttcher
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-########################################################################
-
 import matplotlib
 import matplotlib.pyplot
+import itertools
 import numpy as np
 import math
 def latexify(fig=None,fig_width=None, fig_height=None, columns=1):
@@ -31,13 +13,17 @@ def latexify(fig=None,fig_width=None, fig_height=None, columns=1):
     fig_height : float,  optional, inches
     columns : {1, 2}
     """
-    # code adapted from https://github.com/nilmtk/nilmtk/blob/master/nilmtk/plots.py
+
+    # code adapted from http://www.scipy.org/Cookbook/Matplotlib/LaTeX_Examples
+
+    # Width and max height in inches for IEEE journals taken from
+    # computer.org/cms/Computer.org/Journal%20templates/transactions_art_guide.pdf
 
     assert(columns in [1,2])
 
     if fig_width is None:
-        # fig_width = 2.825 if columns==1 else 5.788 # width in inches
-        fig_width = 3.38 if columns==1 else 7. # width in inches
+        fig_width = 2.825 if columns==1 else 5.788 # width in inches
+        # fig_width = 3.38 if columns==1 else 7. # width in inches
         # fig_width = 3.176 if columns==1 else 6.491 # width in inches
         # fig_width = 3.39 if columns==1 else 6.9 # width in inches
         # 1 inch= 2.54 cm
@@ -58,7 +44,7 @@ def latexify(fig=None,fig_width=None, fig_height=None, columns=1):
               'axes.labelsize': 9, # fontsize for x and y labels (was 10)
               'axes.titlesize': 9,
               'font.size': 10, # was 10
-              'legend.fontsize': 9, # was 10
+              'legend.fontsize': 8, # was 10
               'xtick.labelsize': 8,
               'ytick.labelsize': 8,
               'text.usetex': True,
@@ -76,9 +62,57 @@ def latexify(fig=None,fig_width=None, fig_height=None, columns=1):
     return params
 
 
+def create_colorcyle(number,cmap=None,cmapname="viridis"):
+    if not cmap:
+        cmap = matplotlib.pyplot.get_cmap(cmapname)
+    indices = np.linspace(0, cmap.N, number)
+    my_colors = itertools.cycle([cmap(int(i)) for i in indices])
+    return my_colors
+
+def create_markercycle(number):
+    markerpref=["o","v","s","D","^","<",">","+","x",".","X","1","2","3","4","8"]
+    if number <= len (markerpref):
+        markers=markerpref
+    else:
+        markers = [(int(2+i/2), 1+i%2, 0) for i in range(number)]
+    return itertools.cycle(markers)
+
+
+def format_axes(ax):
+
+    for spine in ['top', 'right']:
+        ax.spines[spine].set_visible(False)
+
+    for spine in ['left', 'bottom']:
+        ax.spines[spine].set_color(SPINE_COLOR)
+        ax.spines[spine].set_linewidth(0.5)
+
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+
+    for axis in [ax.xaxis, ax.yaxis]:
+        axis.set_tick_params(direction='out', color=SPINE_COLOR)
+
+    return ax
+
+
+def resadjust(ax, xres=None, yres=None):
+    """
+    Send in an axis and I fix the resolution as desired.
+    """
+
+    if xres:
+        start, stop = ax.get_xlim()
+        ticks = np.arange(start, stop + xres, xres)
+        ax.set_xticks(ticks)
+    if yres:
+        start, stop = ax.get_ylim()
+        ticks = np.arange(start, stop + yres, yres)
+        ax.set_yticks(ticks)
+
+
 
 def cm2inch(*tupl):
-    """convert all values from cm to inch """
     inch = 2.54
     if isinstance(tupl[0], tuple):
         return tuple(i/inch for i in tupl[0])
@@ -119,9 +153,8 @@ def align_labels(axes_list,axis='y',align=None):
 #Label line with line2D label data
 #from http://stackoverflow.com/questions/16992038/inline-labels-in-matplotlib
 def label_line(line,x,offset=None,label=None,align=False,alpha=None,**kwargs):
-    """ plot line label with line color at line, not legend """
 
-    ax = line.get_axes()
+    ax = line.axes
     xdata = line.get_xdata()
     ydata = line.get_ydata()
 
@@ -174,19 +207,20 @@ def label_line(line,x,offset=None,label=None,align=False,alpha=None,**kwargs):
         kwargs['va'] = 'center'
 
     if 'backgroundcolor' not in kwargs:
-        kwargs['backgroundcolor'] = ax.get_axis_bgcolor()
+        kwargs['backgroundcolor'] = ax.get_facecolor() #deprecated: get_axis_bgcolor()
 
     if 'alpha' is None:
         alpha=1.
 
-    if 'clip_on' not in kwargs:
-        kwargs['clip_on'] = True
 
-    if 'zorder' not in kwargs:
-        kwargs['zorder'] = 2.5
+    # if 'clip_on' not in kwargs:
+    #     kwargs['clip_on'] = True
+
+    # if 'zorder' not in kwargs:
+    #     kwargs['zorder'] = 2.5
 
     t=ax.text(x,y,label,rotation=trans_angle,**kwargs)
-    t.set_bbox(dict( alpha=alpha))
+    t.set_bbox(dict( alpha=alpha,facecolor=kwargs['backgroundcolor']))
 
 def label_lines(lines,align=True,xvals=None,**kwargs):
 
@@ -210,7 +244,6 @@ def label_lines(lines,align=True,xvals=None,**kwargs):
 
 
 def line_overlap(line,x,y,ydiff=None):
-    """ determine if line is overlapping with coordinate (x,y) """
     if ydiff is None:
         ydiff=y
     xdata = line.get_xdata()
@@ -232,6 +265,8 @@ def line_overlap(line,x,y,ydiff=None):
             break
 
     yline = ydata[ip-1] + (ydata[ip]-ydata[ip-1])*(x-xdata[ip-1])/(xdata[ip]-xdata[ip-1])
+
+    # print(x,y,ydiff,xdata[ip],yline)
 
     if y<yline+ydiff and y > yline-ydiff:
         return True
