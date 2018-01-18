@@ -27,7 +27,7 @@ import matplotlib.ticker
 import egtdynamicsplot
 import itertools
 import plothelpers
-output_folder="/Users/boettcher/plots/egt_cancer/combine_dyn_fig/"
+output_folder="./"
 ##define parameters for each plot
 lhs=[1.,1.,1.,1.,1.,1.]
 eps=[0.,0.1,0.,0.1,0.,0.1]
