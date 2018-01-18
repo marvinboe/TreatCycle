@@ -7,6 +7,7 @@ glioblastoma.
 Required:
 * python3
 * scipy
+* sympy
 * matplotlib
 
 Usage: just start the script, i.e. `python3 ./egt_cancer_dyn.py`.
