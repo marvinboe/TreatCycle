@@ -24,7 +24,6 @@ import scipy.integrate
 import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.ticker
-import egtdynamicsplot
 import itertools
 import plothelpers
 output_folder="./"
@@ -359,8 +358,8 @@ def plot_dynamics(cycle_duration=1,lh=0.75,e=0.1,mig=0.01,outfname="egtdyn.pdf",
     plothelpers.label_line(ax[0].get_lines()[1],last_whitebg_startingx,offset=-plotlabeloffset,alpha=0.)
     # plothelpers.label_line(ax[2].get_lines()[0],last_whitebg_startingx,offset=+10**8,alpha=0.)
     
-    plt.savefig(outfname)
-    # plt.show()
+    # plt.savefig(outfname)
+    plt.show()
     plt.close()
 
 #do the actual plotting
